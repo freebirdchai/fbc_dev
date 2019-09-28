@@ -1,0 +1,74 @@
+{% if section.settings.related_products_enable %}
+  {% include 'product-related-products' %}
+{% endif %}
+
+{% schema %}
+{
+  "name": "Related products",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "related_products_enable",
+      "label": "Enable",
+      "info": "Shows products from same collection",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "product_grid_titles_enable",
+      "label": "Show products title",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "product_grid_prices_enable",
+      "label": "Show products price",
+      "default": true
+    },
+    {
+      "type": "select",
+      "label": "Products text alignent",
+      "id": "product_grid_text_alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Interactions",
+      "info": "Desktop and tablet only."
+    },
+    {
+      "type": "checkbox",
+      "id": "product_grid_interactive_enable",
+      "label": "Show product info on mouse over"
+    },
+    {
+      "type": "range",
+      "id": "product_grid_mouseover_opacity",
+      "label": "Mouse over overlay opacity",
+      "default": 70,
+      "max": 100,
+      "min": 0,
+      "step": 10,
+      "unit": "%"
+    },{
+      "type": "checkbox",
+      "id": "product_grid_mouseover_gradient_enable",
+      "label": "Use gradient as mouse over overlay"
+    }
+  ]
+}
+{% endschema %}

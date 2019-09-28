@@ -1,0 +1,270 @@
+{% assign main_menu = linklists[section.settings.main_nav_linklist] %}
+{% assign side_menu = linklists[section.settings.side_nav_linklist] %}
+{% unless side_menu.empty? %}{% include 'side-nav' %}{% endunless %}
+{% include 'side-cart' %}
+{% include 'search-overlay' %}
+
+{% if section.settings.logo_max_width != blank %}
+  {% assign logo_max_width = section.settings.logo_max_width | plus: 0 %}
+  {% if logo_max_width > 2048 %}
+    {% assign logo_max_width = 2048 %}
+  {% endif %}
+{% else %}
+  {% assign logo_max_width = 150 %}
+{% endif %}
+
+<div class="header {% if section.settings.enable_sticky_header %}sticky{% endif %}" data-section-id="{{ section.id }}" data-section-type="header">
+  {% if section.settings.enable_top_banner %}
+    <div class="top-banner">
+      {{ section.settings.top_banner_richtext }}
+    </div>
+  {% endif %}
+
+  <div class="relative">
+    <div class="bar">
+      <div class="left">
+        {% unless side_menu.empty? %}
+          <a href="#" data-action="toggle-browse" tabindex="-1">
+            <i class="fc fc-hamburguer"></i>
+          </a>
+        {% endunless %}
+      </div>
+      <div class="right">
+        <a class="icon-search" href="/search" data-action="toggle-search">
+          <i class="fc fc-search"></i>
+        </a>
+        <a class="icon-cart" href="/cart" data-action="toggle-cart">
+          <i class="fc fc-cart"></i>
+          <span class="circle cart-count {% if cart.item_count == 0 %}hidden-count{% endif %}">{{ cart.item_count }}</span>
+        </a>
+        {% if settings.show_multiple_currencies %}
+          {% include 'currency-picker' %}
+        {% endif %}
+      </div>
+      <div class="center" itemscope itemtype="http://schema.org/Organization">
+        <a class="logo" href="/" itemprop="url" tabindex="-1">
+          <h1 class="logo">
+            {% if section.settings.logo %}
+              {% capture image_size %}{{ logo_max_width }}x{% endcapture %}
+              <img src="{{ section.settings.logo | img_url: image_size }}"
+                   srcset="{{ section.settings.logo | img_url: image_size }} 1x, {{ section.settings.logo | img_url: image_size, scale: 2 }} 2x"
+                   alt="{{ section.settings.logo.alt | default: shop.name }}"
+                   itemprop="logo">
+            {% else %}
+              {% if section.settings.use_uppercase %}
+                <span>{{ shop.name | upcase }}</span>
+              {% else %}
+                <span style="text-transform: none;">{{ shop.name }}</span>
+              {% endif %}
+            {% endif %}
+          </h1>
+        </a>
+      </div>
+    </div>
+    {% unless main_menu.empty? %}
+      <div class="nav main-nav">
+        <style type="text/css">
+          .header .nav ul li a {
+            text-transform: {{ section.settings.menu_text_transform }};
+            letter-spacing: {{ section.settings.menu_letter_spacing }}px;
+            font-weight: {{ section.settings.menu_font_weight }};
+            font-size: {{ section.settings.menu_font_size }}px;
+          }
+          .header .nav ul li {
+            line-height: {{ section.settings.menu_font_size | plus: 2 }}px;
+          }
+        </style>
+        <ul class="root">
+          {% for link in main_menu.links %}
+            {% capture child_list_handle %}{{ link.title | handle }}{% endcapture %}
+            <li>
+              <a href="{{ link.url }}" tabindex="{{ index }}">{{ link.title }}</a>
+              {% assign index = index | plus: 1 %}
+              {% if linklists[child_list_handle] and linklists[child_list_handle].links.size > 0 %}
+                <a href="{{ link.url }}" class="plus" data-action="link-to-child-list" data-handle="{{ child_list_handle }}" tabindex="{{ index }}">+</a>
+                {% assign index = index | plus: 1 %}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        {% for link in main_menu.links %}
+          {% capture child_list_handle %}{{ link.title | handle }}{% endcapture %}
+          {% if linklists[child_list_handle] and linklists[child_list_handle].links.size > 0 %}
+            <ul class="{{ child_list_handle }}">
+              {% for link in linklists[child_list_handle].links %}
+                {% capture grandson_list_handle %}{{ link.title | handle }}{% endcapture %}
+                <li>
+                  <a href="{{ link.url }}">{{ link.title }}</a>
+                  {% if linklists[grandson_list_handle] and linklists[grandson_list_handle].links.size > 0 %}
+                    <a href="{{ link.url }}" class="plus" data-action="link-to-child-list" data-handle="{{ grandson_list_handle }}">+</a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+              <li><a href="#" data-action="back-to-previous-list"><span>{{ 'layout.side_nav.back' | t }}</span></a></li>
+            </ul>
+
+            {% for link in linklists[child_list_handle].links %}
+              {% capture grandson_list_handle %}{{ link.title | handle }}{% endcapture %}
+              {% if linklists[grandson_list_handle] and linklists[grandson_list_handle].links.size > 0 %}
+                <ul class="{{ grandson_list_handle }}">
+                  {% for link in linklists[grandson_list_handle].links %}
+                    <li>
+                      <a href="{{ link.url }}"><span>{{ link.title }}</span></a>
+                    </li>
+                  {% endfor %}
+                  <li><a href="#" data-action="back-to-previous-list"><span>{{ 'layout.side_nav.back' | t }}</span></a></li>
+                </ul>
+              {% endif %}
+            {% endfor %}
+
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endunless %}
+    <div class="background"></div>
+  </div>
+</div>
+
+<style type="text/css">
+  .header a.logo h1 img {
+    width: {{ logo_max_width }}px;
+  }
+  .header.solid .fixed a.logo h1 img {
+    {% assign logo_fixed_width = logo_max_width | divided_by: 2 %}
+    {% if logo_fixed_width < 100 %}
+      {% assign logo_fixed_width = logo_max_width %}
+    {% endif %}
+    width: {{ logo_fixed_width }}px;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+      },
+      {
+        "type": "range",
+        "id": "logo_max_width",
+        "label": "Custom logo width",
+        "min": 100,
+        "max": 800,
+        "step": 10,
+        "default": 150,
+        "unit": "px"
+      },
+      {
+        "type": "checkbox",
+        "id": "use_uppercase",
+        "label": "Use uppercase in text logo",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "Main menu"
+      },
+      {
+        "type": "link_list",
+        "id": "main_nav_linklist",
+        "label": "Menu",
+        "default": "main-menu"
+      },
+      {
+        "type": "range",
+        "id": "menu_font_size",
+        "label": "Font size",
+        "min": 12,
+        "max": 24,
+        "step": 1,
+        "default": 16,
+        "unit": "px"
+      },
+      {
+        "type": "range",
+        "id": "menu_letter_spacing",
+        "label": "Letter spacing",
+        "min": 0,
+        "max": 2,
+        "step": 1,
+        "default": 1,
+        "unit": "px"
+      },
+      {
+        "type": "select",
+        "id": "menu_text_transform",
+        "label": "Text transform",
+        "default": "uppercase",
+        "options": [
+          {
+            "value": "none",
+            "label": "None"
+          },
+          {
+            "value": "uppercase",
+            "label": "Uppercase"
+          },
+          {
+            "value": "lowercase",
+            "label": "Lowercase"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "menu_font_weight",
+        "label": "Font weight",
+        "default": "700",
+        "options": [
+          {
+            "value": "400",
+            "label": "Normal"
+          },
+          {
+            "value": "700",
+            "label": "Bold"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "Side bar menu"
+      },
+      {
+        "type": "link_list",
+        "id": "side_nav_linklist",
+        "label": "Menu",
+        "default": "main-menu"
+      },
+      {
+        "type": "header",
+        "content": "Top banner"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_top_banner",
+        "label": "Enable",
+        "default": false
+      },
+      {
+        "type": "richtext",
+        "id": "top_banner_richtext",
+        "label": "Text",
+        "default": "<p>Free Shipping and Returns above $100!</p>"
+      },
+      {
+        "type": "header",
+        "content": "Extras"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_sticky_header",
+        "label": "Enable sticky header",
+        "default": true
+      }
+  ]
+}
+{% endschema %}
